@@ -1,0 +1,42 @@
+no. of Chris training emails: 7936
+no. of Sara training emails: 7884
+kernel=linear, C=1.0
+SVM fit time is 290.230060
+SVM predict time is 29.889632
+Accuracy is 0.984073
+
+reducing training data to 1/100th
+kernel=linear, C=1.0
+SVM fit time is 0.194161
+SVM predict time is 1.815575
+Accuracy is 0.884528
+
+reducing training data to 1/100th
+kernel=rbf, C=10.000000
+SVM fit time is 0.190488
+SVM predict time is 2.147771
+Accuracy is 0.616041
+
+reducing training data to 1/100th
+kernel=rbf, C=100.000000
+SVM fit time is 0.216408
+SVM predict time is 2.159049
+Accuracy is 0.616041
+
+kernel=rbf, C=1000.000000
+SVM fit time is 0.186763
+SVM predict time is 1.973340
+Accuracy is 0.821388
+
+reducing training data to 1/100th
+kernel=rbf, C=10000.000000
+SVM fit time is 0.178964
+SVM predict time is 2.183489
+Accuracy is 0.892491
+
+no. of Chris training emails: 7936
+no. of Sara training emails: 7884
+kernel=rbf, C=10000.000000
+SVM fit time is 188.171164
+SVM predict time is 18.595425
+Accuracy is 0.990899

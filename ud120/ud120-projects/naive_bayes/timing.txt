@@ -1,0 +1,5 @@
+no. of Chris training emails: 7936
+no. of Sara training emails: 7884
+Accuracy is 0.973265
+Training time: 4.476 s
+Prediction time: 0.441 s
