@@ -1,0 +1,25 @@
+#Create a new env with 3.5.3 for opencv3
+
+conda create --name XXXX python=3.5.3
+source activate XXXX
+
+## stupid opencv needs 3.5.x does not work with 3.6 !
+conda install -c menpo opencv3
+
+
+conda install -c conda-forge tensorflow
+
+conda install -c conda-forge keras=2.0.2
+
+conda install -c conda-forge python-socketio=1.7.6
+
+conda install -c conda-forge eventlet=0.21.0
+
+
+conda install -c conda-forge pillow=4.2.1
+
+conda install -c conda-forge flask=0.12
+
+conda install -c anaconda scikit-learn=0.18.2
+
+conda install -c anaconda scikit-image=0.13.0
