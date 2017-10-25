@@ -503,8 +503,8 @@ def createVideo():
     video_fname = 'test_videos/project_video.mp4'
     video_outfile = 'test_videos_output/project_video.mp4'
 
-    # video_fname = 'test_videos/test_video.mp4'
-    # video_outfile = 'test_videos_output/test_video.mp4'
+    video_fname = 'test_videos/test_video.mp4'
+    video_outfile = 'test_videos_output/test_video.mp4'
 
     clip1 = VideoFileClip(video_fname)
 
@@ -540,7 +540,7 @@ def test_images():
 
 
 initialize_model()
-test_images()
+#test_images()
 
-#createVideo()
+createVideo()
 
