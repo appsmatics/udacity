@@ -57,7 +57,8 @@ def car_notcar_image_names():
                   'training_data/vehicles/KITTI_extracted/*.png',
                   ]
     not_car_images = ['training_data/non-vehicles/Extras/*.png',
-                      'training_data/non-vehicles/GTI/*.png'
+                      'training_data/non-vehicles/GTI/*.png',
+                      'training_data/non-vehicles/hard_neg/*.png'
                       ]
 
     cars = []
@@ -173,7 +174,7 @@ def single_img_features(img, color_space='RGB',
 # Define a function to extract features from a list of images
 # Have this function call bin_spatial() and color_hist()
 def extract_features_all_imagenames(imgs, color_space='RGB', spatial_size=(32, 32),
-                        hist_bins=32, orient=9,
+                        hist_bins=32, orient=8,
                         pix_per_cell=8, cell_per_block=2, hog_channel=0,
                         spatial_feat=True, hist_feat=True, hog_feat=True):
     # Create a list to append feature vectors to
@@ -311,7 +312,7 @@ def get_sliding_windows_for_size (img, x_start_stop=[None, None], y_start_stop=[
 # Return the windows that have been identified as containing a car
 def search_windows_for_match (img, windows, clf, scaler, color_space='RGB',
                     spatial_size=(32, 32), hist_bins=32,
-                    hist_range=(0, 256), orient=9,
+                    hist_range=(0, 256), orient=8,
                     pix_per_cell=8, cell_per_block=2,
                     hog_channel=0, spatial_feat=True,
                     hist_feat=True, hog_feat=True):
@@ -345,11 +346,11 @@ def search_windows_for_match (img, windows, clf, scaler, color_space='RGB',
 # And return all the windows that identify as having a car in them
 # Multiple overlapping windows will be returned by this function.
 def multi_sliding_windows(image):
-    sliding_window_params = [{'y_start_stop': [360,544], 'xy_overlap':(0.75,0.75), 'xy_window':(64,64), 'color':COLOR_BLUE},
-                             {'y_start_stop': [384,544], 'xy_overlap':(0.75, 0.75),'xy_window':(128, 128),'color': COLOR_GREEN},
-                             {'y_start_stop': [384,544], 'xy_overlap':(0.8, 0.8),  'xy_window':(160, 160),'color': COLOR_ORANGE},
-                             {'y_start_stop': [384,576], 'xy_overlap':(0.75, 0.75),'xy_window':(192, 192),'color': COLOR_PURPLE},
-                             {'y_start_stop': [376,640], 'xy_overlap':(0.75, 0.75),'xy_window':(256, 256),'color': COLOR_RED}]
+    sliding_window_params = [{'x_start_stop': [600,1180], 'y_start_stop': [400,444], 'xy_overlap':(0.8,0.8), 'xy_window':(64,64), 'color':COLOR_BLUE},
+                             {'x_start_stop': [600,1180], 'y_start_stop': [384,544], 'xy_overlap':(0.8, 0.8),'xy_window':(128, 128),'color': COLOR_GREEN},
+                             {'x_start_stop': [512,1280], 'y_start_stop': [384,640], 'xy_overlap':(0.8, 0.8),  'xy_window':(160, 160),'color': COLOR_ORANGE},
+                             {'x_start_stop': [512,1280], 'y_start_stop': [384,646], 'xy_overlap':(0.8, 0.8),'xy_window':(192, 192),'color': COLOR_PURPLE},
+                             {'x_start_stop': [512,1280], 'y_start_stop': [384,640], 'xy_overlap':(0.8, 0.8),'xy_window':(256, 256),'color': COLOR_RED}]
 
     (color_space,
      orient, pix_per_cell, cell_per_block, hog_channel
@@ -358,7 +359,7 @@ def multi_sliding_windows(image):
 
     hot_windows_accum=[]
     for param in sliding_window_params:
-        x_start_stop=[None,None]
+        x_start_stop= param['x_start_stop']
         y_start_stop = param['y_start_stop']
         xy_overlap=param['xy_overlap']
         xy_window=param['xy_window']
@@ -432,6 +433,8 @@ def draw_labeled_bboxes(img, labels):
 
 
 
+import heatmap
+accum_heatmap = heatmap.HeatMapAccumulator()
 
 def draw_heat_map(image, box_list):
     from scipy.ndimage.measurements import label
@@ -441,13 +444,15 @@ def draw_heat_map(image, box_list):
     # Add heat to each box in box list
     heat = add_heat(heat, box_list)
 
+    accum_heatmap.add_heatmap_image(heat)
+
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 1)
+    #heat = apply_threshold(heat, 1)
 
     # Visualize the heatmap when displaying
     #heatmap = np.clip(heat, 0, 255)
 
-    heatmap=heat
+    heatmap=accum_heatmap.get_summed_heat_map(5)
 
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
@@ -503,8 +508,8 @@ def createVideo():
     video_fname = 'test_videos/project_video.mp4'
     video_outfile = 'test_videos_output/project_video.mp4'
 
-    video_fname = 'test_videos/test_video.mp4'
-    video_outfile = 'test_videos_output/test_video.mp4'
+    # video_fname = 'test_videos/test_video.mp4'
+    # video_outfile = 'test_videos_output/test_video.mp4'
 
     clip1 = VideoFileClip(video_fname)
 
@@ -532,7 +537,7 @@ def test_image(image_name='test_images/test1.jpg'):
 def test_images():
     image_names=['test_images/test1.jpg', 'test_images/test2.jpg', 'test_images/test3.jpg', 'test_images/test4.jpg'
                  ,'test_images/test5.jpg','test_images/test6.jpg']
-    #image_names=['test_images/test1.jpg']
+    image_names=['test_images/test1.jpg']
 
     for image_name in image_names:
         test_image(image_name)
