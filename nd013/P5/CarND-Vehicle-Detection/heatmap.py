@@ -1,33 +1,42 @@
-# Average heatmap over multiple frames
-
 import numpy as np
 
-
-# class to maintain a list of N recent heatmaps
+# class to maintain a list and accumulation of N recent heatmaps
+# A threshold can also be applied to the accumulated heatmap
+# i.e. heatmap[:,:] < threshold = 0
 
 class HeatMapAccumulator:
 
-    max_images=0
-    image_array = []
+    max_hetamaps=0
+    threshold=0
+    heatmap_array = []
+    heatmap_sum = None
 
-    def __init__(self, size=10):
-        self.max_images = size
-
-
-    # bounded to size max_images
-    def add_heatmap_image (self, image):
-        if (len(self.image_array) == self.max_images):
-            self.image_array.pop(0)
-        self.image_array.append(image)
+    def __init__(self, size=10, threshold=5):
+        self.max_hetamaps = size
+        self.threshold = threshold
+        self.heatmap_array = []
+        self.heatmap_sum = None
 
 
-    def get_summed_heat_map (self, threshold=7):
-        image_sum = np.copy(self.image_array[0])
-        if (len(self.image_array) == 1):
-            return self.apply_threshold(image_sum, threshold)
-        for i in range(1, len(self.image_array)):
-            image_sum = np.add(image_sum, self.image_array[i])
-        return self.apply_threshold(image_sum, threshold)
+    # bounded to size max_hetamaps
+    def add_heatmap (self, heatmap):
+
+        if (len(self.heatmap_array) == 0):
+            self.heatmap_sum = np.copy(heatmap)
+            self.heatmap_array.append(heatmap)
+            return
+
+        if (len(self.heatmap_array) == self.max_hetamaps):
+            heat = self.heatmap_array.pop(0)
+            self.heatmap_sum = np.subtract(self.heatmap_sum, heat)
+
+        self.heatmap_sum = np.add(self.heatmap_sum, heatmap)
+        self.heatmap_array.append(heatmap)
+
+
+    def get_summed_heat_map_after_threshold (self):
+        heatmap = np.copy(self.heatmap_sum)
+        return self.apply_threshold(heatmap, self.threshold)
 
 
     def apply_threshold(self, heatmap, threshold):

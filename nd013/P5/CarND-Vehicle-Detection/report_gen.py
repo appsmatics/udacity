@@ -57,8 +57,7 @@ def car_notcar_image_names():
                   'training_data/vehicles/KITTI_extracted/*.png',
                   ]
     not_car_images = ['training_data/non-vehicles/Extras/*.png',
-                      'training_data/non-vehicles/GTI/*.png',
-                      'training_data/non-vehicles/hard_neg/*.png'
+                      'training_data/non-vehicles/GTI/*.png'
                       ]
 
     cars = []
@@ -75,8 +74,7 @@ def car_notcar_image_names():
     return (cars, notcars)
 
 
-# Get the HOG features for this channel of image
-# Note supplied image is 2d for one color channel
+#Get the HOG features for this image
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                         vis=False, feature_vec=True):
     # Call with two outputs if vis==True
@@ -201,96 +199,7 @@ def extract_features_all_imagenames(imgs, color_space='RGB', spatial_size=(32, 3
 def train_data_set_and_generate_model():
     import pickle
 
-    (cars,notcars) = car_notcar_image_names()
-    print("Car images: ", len(cars)," / Non-car images: ",len(notcars))
-
-    # Reduce the sample size because
-    # The quiz evaluator times out after 13s of CPU time
-    # sample_size = 3000
-    # cars = cars[0:sample_size]
-    # notcars = notcars[0:sample_size]
-
-    (color_space,
-     orient, pix_per_cell, cell_per_block, hog_channel
-     , spatial_size, hist_bins
-     , spatial_feat, hist_feat, hog_feat) = get_the_parameters()
-
-    #Get a random state
-    rand_state = np.random.randint(0, 100)
-
-    cars_train, cars_test, _, _ = train_test_split(cars, cars, test_size=0.2, random_state=rand_state)
-    not_cars_train, not_cars_test, _, _ = train_test_split(notcars, notcars, test_size=0.25, random_state=rand_state)
-
-    car_features = extract_features_all_imagenames (cars_train, color_space=color_space,
-                                    spatial_size=spatial_size, hist_bins=hist_bins,
-                                    orient=orient, pix_per_cell=pix_per_cell,
-                                    cell_per_block=cell_per_block,
-                                    hog_channel=hog_channel, spatial_feat=spatial_feat,
-                                    hist_feat=hist_feat, hog_feat=hog_feat)
-    notcar_features = extract_features_all_imagenames (not_cars_train, color_space=color_space,
-                                       spatial_size=spatial_size, hist_bins=hist_bins,
-                                       orient=orient, pix_per_cell=pix_per_cell,
-                                       cell_per_block=cell_per_block,
-                                       hog_channel=hog_channel, spatial_feat=spatial_feat,
-                                       hist_feat=hist_feat, hog_feat=hog_feat)
-
-    #combine the features for car and not_car images
-    X_train_us = np.vstack((car_features, notcar_features)).astype(np.float64)
-    # Fit a per-column scaler
-    X_scaler = StandardScaler().fit(X_train_us)
-    # Apply the scaler to X
-    X_train = X_scaler.transform(X_train_us)
-
-    # Define the labels vector
-    y_train = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
-
-
-    #Repeat for test
-    car_features = extract_features_all_imagenames(cars_test, color_space=color_space,
-                                                   spatial_size=spatial_size, hist_bins=hist_bins,
-                                                   orient=orient, pix_per_cell=pix_per_cell,
-                                                   cell_per_block=cell_per_block,
-                                                   hog_channel=hog_channel, spatial_feat=spatial_feat,
-                                                   hist_feat=hist_feat, hog_feat=hog_feat)
-    notcar_features = extract_features_all_imagenames(not_cars_test, color_space=color_space,
-                                                      spatial_size=spatial_size, hist_bins=hist_bins,
-                                                      orient=orient, pix_per_cell=pix_per_cell,
-                                                      cell_per_block=cell_per_block,
-                                                      hog_channel=hog_channel, spatial_feat=spatial_feat,
-                                                      hist_feat=hist_feat, hog_feat=hog_feat)
-
-    # combine the features for car and not_car images
-    X_test_us = np.vstack((car_features, notcar_features)).astype(np.float64)
-    # Fit a per-column scaler
-    # Apply the scaler to X
-    X_test = X_scaler.transform(X_test_us)
-
-    # Define the labels vector
-    y_test = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
-
-
-    # Use a linear SVC
-    svc = LinearSVC()
-    # Check the training time for the SVC
-    t1 = time.time()
-    svc.fit(X_train, y_train)
-    t2 = time.time()
-    print(round(t2 - t1, 2), 'Seconds to train SVC...')
-    # Check the score of the SVC
-    print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
-    # Check the prediction time for a single sample
-    t3 = time.time()
-    print("Dumping model to pickle file: ", PICKLE_FILE)
-    file = open(PICKLE_FILE, "wb")
-    pickle.dump((svc,X_scaler), file)
-    return (svc, X_scaler)
-
-
-
-def train_data_set_and_generate_model_old ():
-    import pickle
-
-    (cars,notcars) = car_notcar_image_names()
+    (cars, notcars) = car_notcar_image_names()
     print("Car images: ", len(cars)," / Non-car images: ",len(notcars))
 
     # Reduce the sample size because
@@ -437,20 +346,30 @@ def search_windows_for_match (img, windows, clf, scaler, color_space='RGB',
 def multi_sliding_windows(image):
     sliding_window_params = \
         [
-            {'x_start_stop': [600, 1100], 'y_start_stop': [384, 496], 'xy_overlap': (0.8, 0.8), 'xy_window': (80, 80), 'color': COLOR_BLUE},
-            {'x_start_stop': [600, 1180], 'y_start_stop': [384, 554], 'xy_overlap': (0.8, 0.8), 'xy_window': (128, 128), 'color': COLOR_GREEN},
-            {'x_start_stop': [580, 1280], 'y_start_stop': [440, 640], 'xy_overlap': (0.8, 0.8), 'xy_window': (160, 160), 'color': COLOR_ORANGE},
+            {'x_start_stop': [600,1100], 'y_start_stop': [384,496], 'xy_overlap':(0.8,0.8), 'xy_window':(80,80), 'color':COLOR_BLUE},
+            {'x_start_stop': [600,1180], 'y_start_stop': [384,554], 'xy_overlap':(0.8, 0.8),'xy_window':(128, 128),'color': COLOR_GREEN},
+            {'x_start_stop': [580,1280], 'y_start_stop': [440,640], 'xy_overlap':(0.8, 0.8),  'xy_window':(160, 160),'color': COLOR_ORANGE},
             {'x_start_stop': [520, 1280], 'y_start_stop': [460, 708], 'xy_overlap': (0.8, 0.8), 'xy_window': (192, 192), 'color': COLOR_PURPLE}
         ]
+
+    # {'x_start_stop': [512, 1180], 'y_start_stop': [384, 496], 'xy_overlap': (0.8, 0.8), 'xy_window': (80, 80),
+    #  'color': COLOR_BLUE},
+    # {'x_start_stop': [512, 1180], 'y_start_stop': [384, 554], 'xy_overlap': (0.8, 0.8), 'xy_window': (128, 128),
+    #  'color': COLOR_GREEN},
+    # {'x_start_stop': [512, 1280], 'y_start_stop': [400, 640], 'xy_overlap': (0.8, 0.8), 'xy_window': (160, 160),
+    #  'color': COLOR_ORANGE},
+    # {'x_start_stop': [512, 1280], 'y_start_stop': [420, 708], 'xy_overlap': (0.8, 0.8), 'xy_window': (192, 192),
+    #  'color': COLOR_PURPLE}
 
     (color_space,
      orient, pix_per_cell, cell_per_block, hog_channel
      , spatial_size, hist_bins
      , spatial_feat, hist_feat, hog_feat) = get_the_parameters()
 
+    windows_accum=[]
     hot_windows_accum=[]
     for param in sliding_window_params:
-        x_start_stop= param['x_start_stop']
+        x_start_stop=param['x_start_stop']
         y_start_stop = param['y_start_stop']
         xy_overlap=param['xy_overlap']
         xy_window=param['xy_window']
@@ -466,8 +385,8 @@ def multi_sliding_windows(image):
                                  hog_channel=hog_channel, spatial_feat=spatial_feat,
                                  hist_feat=hist_feat, hog_feat=hog_feat)
         hot_windows_accum.extend(hot_windows)
-
-    return hot_windows_accum
+        windows_accum.extend(windows)
+    return hot_windows_accum, windows_accum
 
 
 def debug_show_multiwindows (image, hot_windows, color=(0,0,255), line_thickness=6):
@@ -475,6 +394,7 @@ def debug_show_multiwindows (image, hot_windows, color=(0,0,255), line_thickness
     window_img = draw_boxes(draw_image, hot_windows, color=color, line_thickness=4)
     plt.imshow(window_img)
     plt.show()
+
 
 #######################################################
 
@@ -524,9 +444,6 @@ def draw_labeled_bboxes(img, labels):
 
 
 
-#define a global here
-import heatmap
-heatmap_accumulator = None
 
 def draw_heat_map(image, box_list):
     from scipy.ndimage.measurements import label
@@ -536,21 +453,16 @@ def draw_heat_map(image, box_list):
     # Add heat to each box in box list
     heat = add_heat(heat, box_list)
 
-    heatmap_accumulator.add_heatmap(heat)
-
     # Apply threshold to help remove false positives
-    #heat = apply_threshold(heat, 1)
+    heat = apply_threshold(heat, 1)
 
     # Visualize the heatmap when displaying
-    #heatmap = np.clip(heat, 0, 255)
+    heatmap = np.clip(heat, 0, 255)
 
-    heatmapsum=heatmap_accumulator.get_summed_heat_map_after_threshold()
-    heatmap=heatmapsum
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
-    labelled_img = draw_labeled_bboxes(np.copy(image), labels)
-    return (labelled_img, heatmap)
-
+    draw_img = draw_labeled_bboxes(np.copy(image), labels)
+    return draw_img
 
 
 
@@ -586,13 +498,13 @@ def process_jpeg_image(orig_image):
 
     box_list = hot_windows_accum
 
-    labelled_image, heat_map_image = draw_heat_map(np.copy(orig_image), box_list)
-    return window_img, heat_map_image, labelled_image
+    heat_map_image = draw_heat_map(np.copy(orig_image), box_list)
+    return window_img, heat_map_image
 
 
 def process_video_image(orig_image):
-    window_img, heat_map_image, labelled_image = process_jpeg_image(orig_image)
-    return labelled_image
+    window_img, heat_map_image = process_jpeg_image(orig_image)
+    return heat_map_image
 
 
 from moviepy.editor import VideoFileClip
@@ -610,24 +522,15 @@ def createVideo():
 
 
 def test_image(image_name='test_images/test1.jpg'):
-
-    #for images create a new one each image (ie no accumulation)
-    global heatmap_accumulator
-    heatmap_accumulator = heatmap.HeatMapAccumulator(size=1, threshold=1)
-
-
     image = mpimg.imread(image_name)
-    window_img, heat_map_image, labelled_image = process_jpeg_image(image)
+    window_img, heat_map_image = process_jpeg_image(image)
     fig = plt.figure(figsize=(12,6))
-    plt.subplot(131)
+    plt.subplot(121)
     plt.imshow(window_img)
-    plt.title('Detected')
-    plt.subplot(132)
+    plt.title('Car Positions')
+    plt.subplot(122)
     plt.imshow(heat_map_image, cmap='hot')
     plt.title('Heat Map')
-    plt.subplot(133)
-    plt.imshow(labelled_image)
-    plt.title('Labelled')
     fig.tight_layout()
     plt.show()
 
@@ -635,18 +538,119 @@ def test_image(image_name='test_images/test1.jpg'):
 def test_images():
     image_names=['test_images/test1.jpg', 'test_images/test2.jpg', 'test_images/test3.jpg', 'test_images/test4.jpg'
                  ,'test_images/test5.jpg','test_images/test6.jpg']
-    #image_names=['test_images/test1.jpg']
+    #image_names=['test_images/test4.jpg']
 
     for image_name in image_names:
         test_image(image_name)
 
 
 
-initialize_model()
-
+#initialize_model()
 #test_images()
 
-#For Video need only 1 acculumator for all frames
-heatmap_accumulator = heatmap.HeatMapAccumulator(size=28, threshold=24)
-createVideo()
+#createVideo()
 
+
+def plot_sample_car_notcar ():
+    (cars, notcars) = car_notcar_image_names()
+    rand1 = np.random.randint(0, len(cars))
+    rand2 = np.random.randint(0, len(notcars))
+
+    car = mpimg.imread(cars[rand1])
+    notcar = mpimg.imread(notcars[rand2])
+    fig = plt.figure(figsize=(12,6))
+    plt.subplot(121)
+    plt.imshow(car)
+    plt.title('Car Image')
+    plt.subplot(122)
+    plt.imshow(notcar)
+    plt.title('Not car Image')
+    fig.tight_layout()
+    plt.show()
+    return car
+
+#car_image = plot_sample_car_notcar()
+
+
+# (cars, notcars) = car_notcar_image_names()
+# rand1 = np.random.randint(0, len(cars))
+# rand2 = np.random.randint(0, len(notcars))
+#
+# car_image = mpimg.imread(cars[rand1])
+# notcar_image = mpimg.imread(notcars[rand2])
+#
+# (color_space, orient, pix_per_cell, cell_per_block, hog_channel
+#  ,spatial_size, hist_bins, spatial_feat, hist_feat, hog_feat) = get_the_parameters()
+#
+# hog_features, hog_image0 = get_hog_features(car_image[:,:,0], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+# hog_features, hog_image1 = get_hog_features(car_image[:,:,1], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+# hog_features, hog_image2 = get_hog_features(car_image[:,:,2], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+#
+#
+# hog_features, nchog_image0 = get_hog_features(notcar_image[:,:,0], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+# hog_features, nchog_image1 = get_hog_features(notcar_image[:,:,1], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+# hog_features, nchog_image2 = get_hog_features(notcar_image[:,:,2], orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, vis=True,
+#                  feature_vec=True)
+#
+#
+# fig = plt.figure(figsize=(12, 6))
+# plt.subplot(3,4,1)
+# plt.imshow(car_image, cmap='gray')
+# plt.title('Car Image')
+# plt.subplot(3,4,2)
+# plt.imshow(hog_image0, cmap='gray')
+# plt.title('Hog CH-0')
+#
+# plt.subplot(3,4,3)
+# plt.imshow(notcar_image, cmap='gray')
+# plt.title('not-car Image')
+# plt.subplot(3,4,4)
+# plt.imshow(nchog_image0, cmap='gray')
+# plt.title('not-car Hog CH-0')
+#
+#
+# plt.subplot(3,4,5)
+# plt.imshow(car_image, cmap='gray')
+# plt.title('Car Image')
+# plt.subplot(3,4,6)
+# plt.imshow(hog_image1, cmap='gray')
+# plt.title('Hog CH-1')
+#
+# plt.subplot(3,4,7)
+# plt.imshow(notcar_image, cmap='gray')
+# plt.title('not-car Image')
+# plt.subplot(3,4,8)
+# plt.imshow(nchog_image1, cmap='gray')
+# plt.title('not-car Hog CH-1')
+#
+# plt.subplot(3,4,9)
+# plt.imshow(car_image, cmap='gray')
+# plt.title('Car Image')
+# plt.subplot(3,4,10)
+# plt.imshow(hog_image2, cmap='gray')
+# plt.title('Hog CH-2')
+#
+# plt.subplot(3,4,11)
+# plt.imshow(notcar_image, cmap='gray')
+# plt.title('not-car Image')
+# plt.subplot(3,4,12)
+# plt.imshow(nchog_image2, cmap='gray')
+# plt.title('not-car Hog CH-2')
+#
+# fig.tight_layout()
+# plt.show()
+
+def show_sliding_windows (image_name='test_images/test1.jpg'):
+    image = mpimg.imread(image_name)
+    hot_windows, windows = multi_sliding_windows(image)
+    debug_show_multiwindows(image, windows)
+
+
+initialize_model()
+
+show_sliding_windows()
